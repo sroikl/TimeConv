@@ -47,7 +47,6 @@ class ImageLoader:
                 range2= norm_dry-norm_wet
                 img= img*range2 + norm_wet
 
-
                 xsize,ysize = img.shape
 
                 padx = self.padsize - xsize ; pady = self.padsize - ysize

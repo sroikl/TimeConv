@@ -1,10 +1,10 @@
 from torch.utils.data import DataLoader
 import abc
 import tqdm
-from Configuration import SAVE_DIR
 import torch
 import os
 import numpy as np
+from Configuration import SAVE_DIR
 
 class Trainer:
     def __init__(self,SAVE_DIR):
@@ -25,8 +25,11 @@ class Trainer:
             loss_test.append(np.mean(loss_ts_epoch))
 
             #Saving data
-            saved_state= dict(loss_train=loss_train,loss_test=loss_test)
-            torch.save(saved_state,os.path.join(SAVE_DIR,'Results.pt'))
+            if Epoch%5==0:
+                saved_state= dict(loss_train=loss_train,loss_test=loss_test)
+                torch.save(saved_state,os.path.join(SAVE_DIR,'Results.pt'))
+
+
 
         #TODO: add features such as checkpoints, early stopping etc.
 

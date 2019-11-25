@@ -1,26 +1,28 @@
 import torch
 from torch.utils import data
-from Configuration import parse_args,DATA_DIR,LABEL_DIR
+from Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
 from DataLoader import DataLoader
 from Model import TemporalSpatialModel
 from Training import TCNTrainer
 import numpy as np
 from torch.utils.data.sampler import BatchSampler,SequentialSampler
+import os
 
 def runTCN(args):
+
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    os.makedirs(SAVE_DIR)
+    your_data = {"Epochs":args.Epochs, 'lr':args.lr,'Weight_Decay':args.weight_decay,'TCN_LEVELS':args.num_levels,'Hidden Dimension':args.num_hidden,
+                 'Kernel_Size':args.kernel_size,'Dropout':args.dropout,'embedding_Size':args.embedding_size}
+
+    print(your_data, file=open(os.path.join(SAVE_DIR,'RunData.txt'), 'w'))
 
     # ============================== DATA LOADING =========================
 
     data = DataLoader(DATA_DIR=DATA_DIR, LABEL_DIR=LABEL_DIR, device=device, padsize=args.padsize, usefull=True)
     X, y = data.LoadData()
 
-    # NumSamples= X.shape[0]
-    # num_full_batches= NumSamples//args.batch_size
-    # X= X[:num_full_batches * args.batch_size,:] ; y= y[:num_full_batches * args.batch_size,:]
-
-    # X=X.view(-1, *X.shape[2:]) ; y=y.view(-1) #This line is for flattening the Tensor
-    # X=X[100:400,:]; y=y[100:400,:]
     validation_split = 0.3;
 
     dataset = torch.utils.data.TensorDataset(X, y)
@@ -30,9 +32,10 @@ def runTCN(args):
     print(f'Sampels Shape is:%s' % {next(iter(dl_train))[0].shape})
     print(f'Label Shape is:%s' % {next(iter(dl_train))[1].shape})
 
-    model= TemporalSpatialModel(num_levels=10,num_hidden=1000,embedding_size=160,kernel_size=3,dropout=0.2)
+    model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size=args.embedding_size,
+                                kernel_size=args.kernel_size,dropout=args.dropout)
     optimizer = torch.optim.Adam(
-            model.parameters(), betas=(0.9, 0.999), lr=1e-3, weight_decay=0)
+            model.parameters(), betas=(0.9, 0.999), lr=args.lr, weight_decay=args.weight_decay)
     loss_fn = loss()
 
     Trainer= TCNTrainer(model=model,loss_fn=loss_fn,optimizer=optimizer,device=device)

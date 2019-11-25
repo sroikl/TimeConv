@@ -98,7 +98,10 @@ class TemporalSpatialModel(nn.Module):
         self.FeatureVectore= ImageFeatureExtractor()
         self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size,kernel_size=kernel_size,
                       dropout=dropout)
-        self.FinalFC = nn.Sequential(nn.Linear(embedding_size,1), nn.ReLU())
+        self.FinalFC = nn.Sequential(nn.Linear(embedding_size,embedding_size//2), nn.LeakyReLU(negative_slope=0.1)
+                                     ,nn.Linear(embedding_size//2,embedding_size//4),nn.LeakyReLU(negative_slope=0.1)
+                                     ,nn.Linear(embedding_size//4,64),nn.LeakyReLU(negative_slope=0.1)
+                                     ,nn.Linear(64,1),nn.ReLU())
 
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
