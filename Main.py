@@ -33,7 +33,7 @@ def runTCN(args):
     print(f'Label Shape is:%s' % {next(iter(dl_train))[1].shape})
 
     model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size=args.embedding_size,
-                                kernel_size=args.kernel_size,dropout=args.dropout)
+                                kernel_size=args.kernel_size,dropout=args.dropout).to(device=device)
     optimizer = torch.optim.Adam(
             model.parameters(), betas=(0.9, 0.999), lr=args.lr, weight_decay=args.weight_decay)
     loss_fn = loss()
