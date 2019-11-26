@@ -25,7 +25,7 @@ LABEL_DIR = '/Users/roiklein/Dropbox/Msc Project/Deep Learning Project/lys_prc.c
 #
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--batch_size',type=int,default=16,help='Number of samples in each batch')
+parser.add_argument('--batch_size',type=int,default=8,help='Number of samples in each batch')
 parser.add_argument('--momentum',type=float,default=0.9,help='Momentum constant')
 parser.add_argument('--padsize',type=int,default=300,help='Pad array of images with zeros in "padsize" size')
 parser.add_argument('--Epochs',type=int,default=500,help='Number of Epochs')
@@ -36,7 +36,7 @@ def parse_args(is_training=True):
         parser.add_argument('--lr', type=float, default=1e-3, help='learning rate decay')
         parser.add_argument('--num_levels',type=int,default=10,help='Number of TCN levels')
         parser.add_argument('--num_hidden',type=int,default=1000,help='Number of TCN hidden feature maps')
-        parser.add_argument('--embedding_size',type=int,default=160,help='TCN Output layer dimension')
+        parser.add_argument('--embedding_size',type=int,default=80,help='TCN Output layer dimension')
         parser.add_argument('--kernel_size',type=int,default=3,help='TCN feature map size (nxn)')
         parser.add_argument('--dropout',type=float,default=0.3,help='')
         parser.add_argument('--weight_decay',type=float,default=0,help='')

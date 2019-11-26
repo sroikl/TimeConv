@@ -66,14 +66,14 @@ class ImageLoader:
 
     @staticmethod
     def Random_Rotation(img):
-        transform= RandomRotation(degrees=(0,180))
+        transform= RandomRotation(degrees=(0,0))
         rotated_img= transform.__call__(img)
         to_tensor= ToTensor()
         return to_tensor(rotated_img)
 
     @staticmethod
-    def Random_flip(img):
-        transform = RandomHorizontalFlip()
+    def Random_flip(img,p=0.1):
+        transform = RandomHorizontalFlip(p=p)
         flipped_img= transform.__call__(img)
         return flipped_img
 

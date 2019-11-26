@@ -103,8 +103,8 @@ class TemporalSpatialModel(nn.Module):
         #                              ,nn.Linear(embedding_size//4,64),nn.LeakyReLU(negative_slope=0.1)
         #                              ,nn.Linear(64,1),nn.ReLU())
         self.FinalFC= nn.Sequential(
-            nn.Linear(embedding_size*10*16,embedding_size*10),nn.ReLU()
-            ,nn.Linear(embedding_size*10,embedding_size),nn.ReLU()
+            nn.Linear(embedding_size*10*8,embedding_size*10,bias=True),nn.ReLU()
+            ,nn.Linear(embedding_size*10,embedding_size,bias=True),nn.ReLU()
         )
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
