@@ -7,7 +7,8 @@ from Training import TCNTrainer
 import numpy as np
 from torch.utils.data.sampler import BatchSampler,SequentialSampler
 import os
-
+from random import choices
+import itertools
 def runTCN(args):
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -45,23 +46,26 @@ def Split_Test_Train(dataset,validation_split,batch_size):
 
     # Creating data indices for training and validation splits:
     dataset_size = len(dataset)
-    indices = list(range(dataset_size))
-    split = int(np.floor(validation_split * dataset_size))
-    train_indices, val_indices = indices[split:], indices[:split]
+    num_full_batches= dataset_size//batch_size
 
-    num_full_batches_train= len(train_indices)//batch_size
-    num_full_batches_test= len(val_indices)//batch_size
+    indices= np.arange(num_full_batches*batch_size)
+    indices= np.reshape(indices,(num_full_batches,batch_size))
 
-    train_indices= train_indices[:int(num_full_batches_train*batch_size)]
-    val_indices= val_indices[:int(num_full_batches_test*batch_size)]
+    num_full_batches_test= int(num_full_batches*validation_split)
+
+    batch_indices_test= choices(np.arange(0,num_full_batches),k=num_full_batches_test)
+    batch_indices_train= [ val for val in np.arange(0,num_full_batches) if val not in batch_indices_test]
+
+    train_indices= indices[batch_indices_train]
+    test_indices= indices[batch_indices_test]
 
     # Creating PT data samplers and loaders:
-    train_sampler = SequentialSampler(train_indices)
-    valid_sampler = SequentialSampler(val_indices)
+    train_sampler = BatchSampler(SequentialSampler(list(itertools.chain(*train_indices))),batch_size=batch_size,drop_last=True)
+    valid_sampler = BatchSampler(SequentialSampler(list(itertools.chain(*test_indices))),batch_size=batch_size,drop_last=True)
 
-    dl_train = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dl_train = torch.utils.data.DataLoader(dataset,
                                            sampler=train_sampler, shuffle=False)
-    dl_test = torch.utils.data.DataLoader(dataset, batch_size=batch_size,
+    dl_test = torch.utils.data.DataLoader(dataset,
                                           sampler=valid_sampler, shuffle=False)
 
     return dl_train,dl_test

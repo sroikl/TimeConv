@@ -100,8 +100,8 @@ class TCNTrainer(Trainer):
 
     def train_batch(self, batch):
         X, y = batch
-        x = X.transpose(0, 1).to(self.device)
-        y = y.transpose(0, 1).to(self.device)
+        x = X.squeeze(dim=0).transpose(0, 1).to(self.device)
+        y = y.squeeze(dim=0).transpose(0, 1).to(self.device)
 
         self.optimizer.zero_grad()
         #Forward Pass
@@ -121,8 +121,8 @@ class TCNTrainer(Trainer):
 
     def test_batch(self, batch):
         X, y = batch
-        x = X.transpose(0, 1).to(self.device)
-        y = y.transpose(0, 1).to(self.device)
+        x = X.squeeze(dim=0).transpose(0, 1).to(self.device)
+        y = y.squeeze(dim=0).transpose(0, 1).to(self.device)
 
         with torch.no_grad():
             # Forward Pass
