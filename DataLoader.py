@@ -4,7 +4,7 @@ import pandas as pd
 from tqdm import tqdm
 import torch
 from matplotlib import pyplot
-from Configuration import pixelfulldict,dry_wet_cloth
+from Configuration import pixelfulldict,dry_wet_cloth,start_date
 from torchvision.transforms import Normalize,RandomHorizontalFlip,RandomRotation,ToTensor
 from PIL import Image
 import os
@@ -30,22 +30,24 @@ class ImageLoader:
             #This Part is to upload Depth Maps
 
             DepthDate = self.FindDapthVisDate(self.list_dates_depth, date)
-            DepthPath= glob.glob(self.DATA_DIR + DepthDate + '**/*.raw')
+
+            # DepthPath= glob.glob(self.DATA_DIR + DepthDate + '**/*.raw')
             # A=np.fromfile(DepthPath[0], dtype='int8', sep="")
             # A = np.reshape(A, (1280, 1024, 2))
 
-            data=np.transpose(pyplot.imread(file[0]))
-            norm_dry= np.median(data[dry_wet_cloth['dry'][0][0]:dry_wet_cloth['dry'][0][1],dry_wet_cloth['dry'][1][0]:dry_wet_cloth['dry'][1][1]])
-            norm_wet= np.median(data[dry_wet_cloth['wet'][0][0]:dry_wet_cloth['wet'][0][1],dry_wet_cloth['wet'][1][0]:dry_wet_cloth['wet'][1][1]])
+            data= pyplot.imread(file[0])
+            norm_dry= np.median(data[dry_wet_cloth['dry'][1][0]:dry_wet_cloth['dry'][1][1],dry_wet_cloth['dry'][0][0]:dry_wet_cloth['dry'][0][1]])
+            norm_wet= np.median(data[dry_wet_cloth['wet'][1][0]:dry_wet_cloth['wet'][1][1],dry_wet_cloth['wet'][0][0]:dry_wet_cloth['wet'][0][1]])
+
+            #normalization
+            range= np.max(data) - np.min(data)
+            data= (data-np.min(data))/range
+
+            range2= norm_dry-norm_wet
+            data= data*range2 + norm_wet
+
             for key in self.pixeldict.keys():
-                img = data[self.pixeldict[key][0][0]:self.pixeldict[key][0][1],self.pixeldict[key][1][0]:self.pixeldict[key][1][1]]
-
-                #normalization
-                range= np.max(img) - np.min(img)
-                img= (img-np.min(img))/range
-
-                range2= norm_dry-norm_wet
-                img= img*range2 + norm_wet
+                img = data[self.pixeldict[key][1][0]:self.pixeldict[key][1][1],self.pixeldict[key][0][0]:self.pixeldict[key][0][1]]
 
                 xsize,ysize = img.shape
 
@@ -112,12 +114,14 @@ class DataLoader(ImageLoader):
             label_list,data_list = [],[]
             for i in range(len(labeldict['lys1'])):
                 labels = [torch.Tensor(np.asarray(labeldict[key][i][0])) for key in labeldict.keys()] ; date = labeldict['lys1'][i][1]
-                img_label= torch.stack([label for label in labels])
-                img_tensor= self.ImageCrop(date=date)
+                date_object= self.GetDateObject(date)
+                if date_object>=start_date:
+                    img_label= torch.stack([label for label in labels])
+                    img_tensor= self.ImageCrop(date=date)
 
-                if img_tensor is not None:
-                    data_list.append(img_tensor)
-                    label_list.append(img_label)
+                    if img_tensor is not None:
+                        data_list.append(img_tensor)
+                        label_list.append(img_label)
 
                 pbar.update(1)
             pbar.close()
@@ -159,7 +163,15 @@ class DataLoader(ImageLoader):
 
         return list_dates_depth
 
-
+    @staticmethod
+    def GetDateObject(date):
+        date_object= datetime.now()
+        try:
+            date_object=datetime(int(date.split('_')[0]), int(date.split('_')[1]), int(date.split('_')[2]),
+                    int(date.split('_')[3]), int(date.split('_')[4]))
+        except ValueError:
+            pass
+        return date_object
 def create_image_dict(pixeldict:dict) -> dict:
     imagedict = {}
     for key in pixeldict.keys():

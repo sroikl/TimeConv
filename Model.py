@@ -93,7 +93,7 @@ class TCN(TemporalConvNet):
 
 class TemporalSpatialModel(nn.Module):
     def __init__(self,num_levels: int, num_hidden: int , embedding_size: int, kernel_size,
-                 dropout):
+                 dropout,numplants:int,batch_size):
         super().__init__()
         self.FeatureVectore= ImageFeatureExtractor()
         self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size,kernel_size=kernel_size,
@@ -103,8 +103,8 @@ class TemporalSpatialModel(nn.Module):
         #                              ,nn.Linear(embedding_size//4,64),nn.LeakyReLU(negative_slope=0.1)
         #                              ,nn.Linear(64,1),nn.ReLU())
         self.FinalFC= nn.Sequential(
-            nn.Linear(embedding_size*10*8,embedding_size*10,bias=True),nn.ReLU()
-            ,nn.Linear(embedding_size*10,embedding_size,bias=True),nn.ReLU()
+            nn.Linear(embedding_size*numplants*batch_size,embedding_size*numplants,bias=True),nn.ReLU()
+            ,nn.Linear(embedding_size*numplants,embedding_size,bias=True),nn.ReLU()
         )
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
