@@ -24,7 +24,7 @@ class ImageLoader:
     def ImageCrop(self,date:str):
 
         ListOfCroppedImages = []
-        file = glob.glob(self.DATA_DIR + date + '**/*.jpg')
+        file = glob.glob(self.DATA_DIR + date + '**/*.tiff')
         CatTensor= None
         if file:
             #This Part is to upload Depth Maps
@@ -40,11 +40,20 @@ class ImageLoader:
             norm_wet= np.median(data[dry_wet_cloth['wet'][1][0]:dry_wet_cloth['wet'][1][1],dry_wet_cloth['wet'][0][0]:dry_wet_cloth['wet'][0][1]])
 
             #normalization
-            range= np.max(data) - np.min(data)
-            data= (data-np.min(data))/range
+            # range= np.max(data) - np.min(data)
+            # data= (data-np.min(data))/range
+            #
+            # range2= norm_dry-norm_wet
+            # data= data*range2 + norm_wet
 
-            range2= norm_dry-norm_wet
-            data= data*range2 + norm_wet
+            data= (data-norm_wet)/(norm_dry-norm_wet)
+            xindices_high,yindices_high= zip(*np.argwhere(data>1))
+            xindices_low,yindices_low= zip(*np.argwhere(data<0))
+            x_indices= xindices_high+xindices_low
+            y_indices= yindices_high+yindices_low
+
+            for i in range(len(x_indices)):
+                data[x_indices[i],y_indices[i]]=10
 
             for key in self.pixeldict.keys():
                 img = data[self.pixeldict[key][1][0]:self.pixeldict[key][1][1],self.pixeldict[key][0][0]:self.pixeldict[key][0][1]]
