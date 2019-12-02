@@ -1,0 +1,1 @@
+{'Epochs': 500, 'lr': 0.0001, 'Weight_Decay': 0, 'TCN_LEVELS': 10, 'Hidden Dimension': 1000, 'Kernel_Size': 3, 'Dropout': 0.3, 'embedding_Size': 80}
