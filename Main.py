@@ -15,7 +15,7 @@ def runTCN(args):
 
     os.makedirs(SAVE_DIR)
     your_data = {"Epochs":args.Epochs, 'lr':args.lr,'Weight_Decay':args.weight_decay,'TCN_LEVELS':args.num_levels,'Hidden Dimension':args.num_hidden,
-                 'Kernel_Size':args.kernel_size,'Dropout':args.dropout,'embedding_Size':args.embedding_size}
+                 'Kernel_Size':args.kernel_size,'Dropout':args.dropout,'embedding_Size':args.embedding_size2}
 
     print(your_data, file=open(os.path.join(SAVE_DIR,'RunData.txt'), 'w'))
 
@@ -33,11 +33,12 @@ def runTCN(args):
     print(f'Sampels Shape is:%s' % {next(iter(dl_train))[0].shape})
     print(f'Label Shape is:%s' % {next(iter(dl_train))[1].shape})
 
-    model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size=args.embedding_size,
+    model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size2=args.embedding_size2,
                                 kernel_size=args.kernel_size,dropout=args.dropout,numplants=args.NumPlants
-                                ,batch_size=args.batch_size).to(device=device)
+                                ,batch_size=args.batch_size,embedding_size1=args.embedding_size1).to(device=device)
     optimizer = torch.optim.Adam(
             model.parameters(), betas=(0.9, 0.999), lr=args.lr, weight_decay=args.weight_decay)
+
     loss_fn = loss()
 
     Trainer= TCNTrainer(model=model,loss_fn=loss_fn,optimizer=optimizer,device=device)

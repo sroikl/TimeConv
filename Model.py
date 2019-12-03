@@ -92,21 +92,22 @@ class TCN(TemporalConvNet):
         return torch.stack([m.t() for m in out])
 
 class TemporalSpatialModel(nn.Module):
-    def __init__(self,num_levels: int, num_hidden: int , embedding_size: int, kernel_size,
-                 dropout,numplants:int,batch_size):
+    def __init__(self,num_levels: int, num_hidden: int , embedding_size1: int, kernel_size,
+                 dropout,numplants:int,embedding_size2:int,batch_size):
         super().__init__()
         self.FeatureVectore= ImageFeatureExtractor()
-        self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size,kernel_size=kernel_size,
+        self.TCN1= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size1,kernel_size=kernel_size,
                       dropout=dropout)
-        # self.FinalFC = nn.Sequential(nn.Linear(embedding_size,embedding_size//2), nn.LeakyReLU(negative_slope=0.1)
-        #                              ,nn.Linear(embedding_size//2,embedding_size//4),nn.LeakyReLU(negative_slope=0.1)
-        #                              ,nn.Linear(embedding_size//4,64),nn.LeakyReLU(negative_slope=0.1)
-        #                              ,nn.Linear(64,1),nn.ReLU())
+        self.TCN2= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size2,kernel_size=kernel_size,
+                      dropout=dropout)
+
+
         self.FinalFC= nn.Sequential(
-            nn.Linear(embedding_size*numplants*batch_size,embedding_size*numplants,bias=True),nn.ReLU()
-            ,nn.Linear(embedding_size*numplants,embedding_size,bias=True),nn.ReLU()
+            nn.Linear(embedding_size2*numplants*batch_size,embedding_size2*numplants,bias=True),nn.ReLU()
+            ,nn.Linear(embedding_size2*numplants,embedding_size2,bias=True),nn.ReLU()
         )
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
-        outputs= self.TCN(FeatureVectore)
+        outputs1= self.TCN1(FeatureVectore)
+        outputs= self.TCN2(torch.add(outputs1,FeatureVectore))
         return self.FinalFC(outputs.view(-1)).view(*outputs.shape[:2])

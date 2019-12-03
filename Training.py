@@ -31,6 +31,7 @@ class Trainer:
 
 
 
+
         #TODO: add features such as checkpoints, early stopping etc.
 
 
@@ -90,7 +91,7 @@ class Trainer:
 
 class TCNTrainer(Trainer):
 
-    def __init__(self, model,loss_fn, optimizer, device=None):
+    def __init__(self, model,loss_fn, optimizer ,device=None):
         super(Trainer, self).__init__()
 
         self.model = model
@@ -130,5 +131,6 @@ class TCNTrainer(Trainer):
 
             # Zero Grad
             loss = self.loss_fn(output, y)
+
 
         return loss.item()
