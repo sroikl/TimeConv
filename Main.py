@@ -3,7 +3,7 @@ from torch.utils import data
 from Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
 from DataLoader import DataLoader
 from Model import TemporalSpatialModel
-from Training import TCNTrainer
+from TrainingOldVersion import TCNTrainer
 import numpy as np
 from torch.utils.data.sampler import BatchSampler,SequentialSampler
 import os
@@ -37,9 +37,9 @@ def runTCN(args):
     print(f'Sampels Shape is:%s' % {next(iter(dl_train))[0].shape})
     print(f'Label Shape is:%s' % {next(iter(dl_train))[1].shape})
 
-    model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size2=args.embedding_size2,
+    model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size=args.embedding_size,
                                 kernel_size=args.kernel_size,dropout=args.dropout,numplants=args.NumPlants
-                                ,batch_size=args.batch_size,embedding_size1=args.embedding_size1).to(device=device)
+                                ,batch_size=args.batch_size).to(device=device)
 
     optimizer = torch.optim.Adam(
             model.parameters(), betas=(0.9, 0.999), lr=args.lr)

@@ -88,16 +88,16 @@ class TCN(TemporalConvNet):
         return torch.stack([m.t() for m in out])
 
 class TemporalSpatialModel(nn.Module):
-    def __init__(self,num_levels: int, num_hidden: int , embedding_size1: int, kernel_size,
+    def __init__(self,num_levels: int, num_hidden: int , embedding_size: int, kernel_size,
                  dropout,numplants:int,embedding_size2:int,batch_size):
         super().__init__()
         self.FeatureVectore= ImageFeatureExtractor()
-        self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size1,kernel_size=kernel_size,
+        self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size,kernel_size=kernel_size,
                       dropout=dropout)
 
         self.FinalFC= nn.Sequential(
-            nn.Linear(embedding_size2*numplants*batch_size,embedding_size2*numplants,bias=True),nn.ReLU()
-            ,nn.Linear(embedding_size2*numplants,embedding_size2,bias=True),nn.ReLU()
+            nn.Linear(embedding_size*numplants*batch_size,embedding_size*numplants,bias=True),nn.ReLU()
+            ,nn.Linear(embedding_size*numplants,embedding_size,bias=True),nn.ReLU()
         )
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
