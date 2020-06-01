@@ -15,12 +15,12 @@ pixelfulldict = {'1':((490,584),(84,200)),'2':((510,638),(256,378)),'3':((395,49
 dry_wet_cloth= {'dry':((306,324),(394,408)),'wet':((584,594),(210,220))}
 
 
-DATA_DIR = "//Users/roiklein/Dropbox/Msc Project/Deep Learning Project/Exp1000_Full/"
-LABEL_DIR = '/Users/roiklein/Dropbox/Msc Project/Deep Learning Project/lys_prc.csv'
+# DATA_DIR = "//Users/roiklein/Dropbox/Msc Project/Deep Learning Project/Exp1000_Full/"
+# LABEL_DIR = '/Users/roiklein/Dropbox/Msc Project/Deep Learning Project/lys_prc.csv'
 # SAVE_DIR = '/Users/roiklein/Dropbox/Msc Project/Deep Learning Project/TimeSeriesAnalysis'
 #
-# DATA_DIR = expanduser('~/Exp1000/')
-# LABEL_DIR = expanduser('~/PNN-AI/lys_prc.csv')
+DATA_DIR = expanduser('~/Exp1000/')
+LABEL_DIR = expanduser('~/TimeConv/lys_prc.csv')
 # SAVE_DIR = expanduser('~/PNN-AI/')
 #
 parser = argparse.ArgumentParser()
