@@ -19,7 +19,7 @@ def runTCN(args):
 
     os.makedirs(SAVE_DIR)
     your_data = {"Epochs":args.Epochs, 'lr':args.lr,'Weight_Decay':args.weight_decay,'TCN_LEVELS':args.num_levels,'Hidden Dimension':args.num_hidden,
-                 'Kernel_Size':args.kernel_size,'Dropout':args.dropout,'embedding_Size':args.embedding_size2}
+                 'Kernel_Size':args.kernel_size,'Dropout':args.dropout}
 
     print(your_data, file=open(os.path.join(SAVE_DIR,'RunData.txt'), 'w'))
 
