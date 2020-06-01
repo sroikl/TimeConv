@@ -89,7 +89,7 @@ class TCN(TemporalConvNet):
 
 class TemporalSpatialModel(nn.Module):
     def __init__(self,num_levels: int, num_hidden: int , embedding_size: int, kernel_size,
-                 dropout,numplants:int,embedding_size2:int,batch_size):
+                 dropout,numplants:int,batch_size):
         super().__init__()
         self.FeatureVectore= ImageFeatureExtractor()
         self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size,kernel_size=kernel_size,
