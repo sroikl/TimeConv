@@ -66,7 +66,7 @@ class Trainer:
         raise NotImplementedError()
 
     @staticmethod
-    def _ForBatch(dl:DataLoader,Epoch,forward_fn):
+    def _ForBatch(dl:DataLoader,forward_fn,Epoch):
 
         losses = []
         num_batches = len(dl.batch_sampler)
