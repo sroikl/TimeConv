@@ -1,9 +1,9 @@
 import torch
 from torch.utils import data
-from OldVersionCode.Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
-from OldVersionCode.DataLoader import DataLoader
-from OldVersionCode.Model import TemporalSpatialModel
-from OldVersionCode.Training import TCNTrainer
+from Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
+from DataLoader import DataLoader
+from Model import TemporalSpatialModel
+from Training import TCNTrainer
 import numpy as np
 from torch.utils.data.sampler import BatchSampler,SequentialSampler
 import os
