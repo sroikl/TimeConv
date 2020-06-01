@@ -1,15 +1,19 @@
 import torch
 from torch.utils import data
-from Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
-from DataLoader import DataLoader
-from Model import TemporalSpatialModel
-from Training import TCNTrainer
+from OldVersionCode.Configuration import parse_args,DATA_DIR,LABEL_DIR,SAVE_DIR
+from OldVersionCode.DataLoader import DataLoader
+from OldVersionCode.Model import TemporalSpatialModel
+from OldVersionCode.Training import TCNTrainer
 import numpy as np
 from torch.utils.data.sampler import BatchSampler,SequentialSampler
 import os
 from random import choices
 import itertools
+
 def runTCN(args):
+
+    RunInference=True
+    # RunInference=False
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -36,14 +40,15 @@ def runTCN(args):
     model= TemporalSpatialModel(num_levels=args.num_levels,num_hidden=args.num_hidden,embedding_size2=args.embedding_size2,
                                 kernel_size=args.kernel_size,dropout=args.dropout,numplants=args.NumPlants
                                 ,batch_size=args.batch_size,embedding_size1=args.embedding_size1).to(device=device)
+
     optimizer = torch.optim.Adam(
-            model.parameters(), betas=(0.9, 0.999), lr=args.lr, weight_decay=args.weight_decay)
+            model.parameters(), betas=(0.9, 0.999), lr=args.lr)
 
     loss_fn = loss()
 
     Trainer= TCNTrainer(model=model,loss_fn=loss_fn,optimizer=optimizer,device=device)
     Trainer.fit(dl_train=dl_train,dl_test=dl_test,num_epochs=args.Epochs)
-
+    torch.save(model.sa,f'{os.getcwd()}/Model.pt')
 def Split_Test_Train(dataset,validation_split,batch_size):
 
     # Creating data indices for training and validation splits:

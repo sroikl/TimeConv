@@ -5,10 +5,10 @@ from tqdm import tqdm
 import torch
 from matplotlib import pyplot
 from Configuration import pixelfulldict,dry_wet_cloth,start_date
-from torchvision.transforms import Normalize,RandomHorizontalFlip,RandomRotation,ToTensor
-from PIL import Image
+from torchvision import transforms
 import os
 from datetime import datetime
+
 class ImageLoader:
 
     def __init__(self,DATA_DIR:str,LABEL_DIR:str
@@ -24,106 +24,55 @@ class ImageLoader:
     def ImageCrop(self,date:str):
 
         ListOfCroppedImages = []
-        file = glob.glob(self.DATA_DIR + date + '**/*.tiff')
+        file = glob.glob(self.DATA_DIR + date + '**/*.jpg')
         CatTensor= None
+
         if file:
-            #This Part is to upload Depth Maps
 
-            DepthDate = self.FindDapthVisDate(self.list_dates_depth, date)
-
-            # DepthPath= glob.glob(self.DATA_DIR + DepthDate + '**/*.raw')
-            # A=np.fromfile(DepthPath[0], dtype='int8', sep="")
-            # A = np.reshape(A, (1280, 1024, 2))
 
             data= pyplot.imread(file[0])
             norm_dry= np.median(data[dry_wet_cloth['dry'][1][0]:dry_wet_cloth['dry'][1][1],dry_wet_cloth['dry'][0][0]:dry_wet_cloth['dry'][0][1]])
             norm_wet= np.median(data[dry_wet_cloth['wet'][1][0]:dry_wet_cloth['wet'][1][1],dry_wet_cloth['wet'][0][0]:dry_wet_cloth['wet'][0][1]])
 
+            #normalization
+            range= np.max(data) - np.min(data)
+            data= (data-np.min(data))/range
 
-            data= (data-norm_wet)/(norm_dry-norm_wet)
-            xindices_high,yindices_high= zip(*np.argwhere(data>1))
-            xindices_low,yindices_low= zip(*np.argwhere(data<0))
-            x_indices= xindices_high+xindices_low
-            y_indices= yindices_high+yindices_low
-
-            for i in range(len(x_indices)):
-                data[x_indices[i],y_indices[i]]=10
+            range2= norm_dry-norm_wet
+            data= data*range2 + norm_wet
 
             for key in self.pixeldict.keys():
                 img = data[self.pixeldict[key][1][0]:self.pixeldict[key][1][1],self.pixeldict[key][0][0]:self.pixeldict[key][0][1]]
 
                 xsize,ysize = img.shape
+
                 padx = self.padsize - xsize ; pady = self.padsize - ysize
                 Padded_im = np.pad(img,((padx//2,padx//2),(pady//2,pady//2)),constant_values=0,mode='constant')
-
-                image_tensor = Image.fromarray(Padded_im)
-                flipped= self.Random_flip(image_tensor)
-                rotated = self.Random_Rotation(flipped)
-                norm= self.Normalize_img(rotated)
-
-
-                ListOfCroppedImages.append(norm.squeeze(dim=0))
+                ListOfCroppedImages.append(Padded_im)
 
             CatTensor = torch.stack([img for img in ListOfCroppedImages])
 
         return CatTensor
 
-    @staticmethod
-    def Random_Rotation(img):
-        transform= RandomRotation(degrees=(0,0))
-        rotated_img= transform.__call__(img)
-        to_tensor= ToTensor()
-        return to_tensor(rotated_img,)
-
-    @staticmethod
-    def Random_flip(img,p=0.1):
-        transform = RandomHorizontalFlip(p=p)
-        flipped_img= transform.__call__(img)
-        return flipped_img
-
-    @staticmethod
-    def Normalize_img(img):
-        # transform = Normalize(mean=(0,0,0),std=(1,1,1))
-        # norm_img = transform.__call__(img)
-        return img
-    @staticmethod
-
-    def FindDapthVisDate(list_dates_depth, date):
-        i=0
-        while True:
-            date_depth= list_dates_depth[i] ;
-            depth_object = datetime(int(date_depth.split('_')[0]), int(date_depth.split('_')[1]), int(date_depth.split('_')[2]),
-                         int(date_depth.split('_')[3]), int(date_depth.split('_')[4]))
-
-            date_obect= datetime(int(date.split('_')[0]),int(date.split('_')[1]),int(date.split('_')[2]),
-                                  int(date.split('_')[3]),int(date.split('_')[4]))
-            if depth_object < date_obect:
-                break
-            else:
-                i+=1
-        return date_depth
-
 
 class DataLoader(ImageLoader):
     def __init__(self,DATA_DIR:str,LABEL_DIR:str,device:str,padsize:int,**kwargs):
-        list_dates_depth = self.GetDepthDates(DATA_DIR)
-        super().__init__(DATA_DIR=DATA_DIR,LABEL_DIR=LABEL_DIR,device=device,padsize=padsize,list_dates_depth=list_dates_depth)
+        super().__init__(DATA_DIR=DATA_DIR,LABEL_DIR=LABEL_DIR,device=device,padsize=padsize)
 
     def LoadData(self):
-        list_dates_depth= self.GetDepthDates(self.DATA_DIR)  # this is to retrieve depth maps and images_no_filter
         labeldict = self.GetDateTimeLabel(self.LABEL_DIR,self.pixeldict)
         with tqdm(total=len(labeldict['lys1']),desc='Loading Data') as pbar:
             label_list,data_list = [],[]
             for i in range(len(labeldict['lys1'])):
-                labels = [torch.Tensor(np.asarray(labeldict[key][i][0])) for key in labeldict.keys()] ; date = labeldict['lys1'][i][1]
+                labels = [torch.Tensor(np.asarray(labeldict[key][i][0]),require_grad=False) for key in labeldict.keys()] ; date = labeldict['lys1'][i][1]
                 date_object= self.GetDateObject(date)
-                if date_object>=start_date:
-                    img_label= torch.stack([label for label in labels])
-                    img_tensor= self.ImageCrop(date=date)
 
-                    if img_tensor is not None:
-                        data_list.append(img_tensor)
-                        label_list.append(img_label)
+                img_label= torch.stack([label for label in labels])
+                img_tensor= self.ImageCrop(date=date)
+
+                if img_tensor is not None:
+                    data_list.append(img_tensor)
+                    label_list.append(img_label)
 
                 pbar.update(1)
             pbar.close()
@@ -156,14 +105,6 @@ class DataLoader(ImageLoader):
             labeldict[plant_labels[i]].append((label,str(dates[i]).replace('-','_') + '_{num:02d}_'.format(num=hours[i]) + '{num:02d}'.format(num=minutes[i])))
         return labeldict
 
-    @staticmethod
-    def GetDepthDates(DATA_DIR):
-        list_dates_depth= []
-        Depth_names= glob.glob(os.path.join(DATA_DIR,'**Depth_day_night*/'))
-        for name in sorted(Depth_names):
-            list_dates_depth.append(name.split('/')[-2][:19])
-
-        return list_dates_depth
 
     @staticmethod
     def GetDateObject(date):
@@ -174,6 +115,7 @@ class DataLoader(ImageLoader):
         except ValueError:
             pass
         return date_object
+
 def create_image_dict(pixeldict:dict) -> dict:
     imagedict = {}
     for key in pixeldict.keys():

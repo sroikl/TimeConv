@@ -51,9 +51,6 @@ class ImageFeatureExtractor(nn.Module):
         return self.inception(x.reshape(N*T,*x.shape[2:])).view(N, T, -1)
 
     def _prepare_for_gpu(self):
-        # if torch.cuda.device_count() > 1:
-        #     print("{0} GPUs are detected.".format(torch.cuda.device_count()))
-        #     self.net = torch.nn.DataParallel(self.net)
 
         if torch.cuda.is_available():
             self.inception.cuda()
@@ -84,7 +81,6 @@ class TCN(TemporalConvNet):
 
         # transpose each sequence so that we get the correct size for the TemporalConvNet
         x = torch.stack([m.t() for m in x])
-
         out = super().forward(x)
 
 
@@ -96,11 +92,8 @@ class TemporalSpatialModel(nn.Module):
                  dropout,numplants:int,embedding_size2:int,batch_size):
         super().__init__()
         self.FeatureVectore= ImageFeatureExtractor()
-        self.TCN1= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size1,kernel_size=kernel_size,
+        self.TCN= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size1,kernel_size=kernel_size,
                       dropout=dropout)
-        self.TCN2= TCN(num_levels=num_levels,num_hidden=num_hidden,embedding_size=embedding_size2,kernel_size=kernel_size,
-                      dropout=dropout)
-
 
         self.FinalFC= nn.Sequential(
             nn.Linear(embedding_size2*numplants*batch_size,embedding_size2*numplants,bias=True),nn.ReLU()
@@ -108,6 +101,11 @@ class TemporalSpatialModel(nn.Module):
         )
     def forward(self,x:torch.Tensor) -> torch.Tensor:
         FeatureVectore= self.FeatureVectore(x)
-        outputs1= self.TCN1(FeatureVectore)
-        outputs= self.TCN2(torch.add(outputs1,FeatureVectore))
+        outputs= self.TCN(FeatureVectore)
         return self.FinalFC(outputs.view(-1)).view(*outputs.shape[:2])
+
+if __name__=='__main__':
+    model = TemporalSpatialModel(num_levels=2,num_hidden=1000,embedding_size1=2048,kernel_size=5,
+                                 dropout=0.2, numplants=10,batch_size=8,embedding_size2=80)
+    x=torch.rand(8,3,500,500)
+    model(x)
