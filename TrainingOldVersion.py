@@ -18,10 +18,10 @@ class Trainer:
 
             print(f'--- EPOCH {Epoch + 1}/{num_epochs} ---')
 
-            loss_tr_epoch = self._train_epoch(dl_train,**kwargs)
+            loss_tr_epoch = self._train_epoch(dl_train,Epoch,**kwargs)
             loss_train.append(np.mean(loss_tr_epoch))
 
-            loss_ts_epoch = self._test_epoch(dl_test,**kwargs)
+            loss_ts_epoch = self._test_epoch(dl_test,Epoch,**kwargs)
             loss_test.append(np.mean(loss_ts_epoch))
 
             # #Saving data
@@ -35,13 +35,13 @@ class Trainer:
         #TODO: add features such as checkpoints, early stopping etc.
 
 
-    def _train_epoch(self,dl_train,**kwargs):
-        return self._ForBatch(dl_train,self.train_batch,**kwargs)
-    def _test_epoch(self,dl_test,**kwargs):
-        return self._ForBatch(dl_test, self.test_batch, **kwargs)
+    def _train_epoch(self,dl_train,Epoch,**kwargs):
+        return self._ForBatch(dl_train,self.train_batch,Epoch,**kwargs)
+    def _test_epoch(self,dl_test,Epoch,**kwargs):
+        return self._ForBatch(dl_test, self.test_batch,Epoch, **kwargs)
 
     @abc.abstractmethod
-    def train_batch(self, batch):
+    def train_batch(self, batch,Epoch_num):
         """
         Runs a single batch forward through the model, calculates loss,
         preforms back-propagation and uses the optimizer to update weights.
@@ -54,7 +54,7 @@ class Trainer:
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def test_batch(self, batch):
+    def test_batch(self, batch,Epoch_num):
         """
         Runs a single batch forward through the model and calculates loss.
         :param batch: A single batch of data  from a data loader (might
@@ -66,7 +66,7 @@ class Trainer:
         raise NotImplementedError()
 
     @staticmethod
-    def _ForBatch(dl:DataLoader,forward_fn):
+    def _ForBatch(dl:DataLoader,Epoch,forward_fn):
 
         losses = []
         num_batches = len(dl.batch_sampler)
@@ -76,7 +76,7 @@ class Trainer:
             dl_iter = iter(dl)
             for batch_idx in range(num_batches):
                 data = next(dl_iter)
-                batch_loss = forward_fn(data)
+                batch_loss = forward_fn(data,Epoch)
 
                 pbar.set_description(f'{pbar_name} ({batch_loss:.3f})')
                 pbar.update()
@@ -99,7 +99,7 @@ class TCNTrainer(Trainer):
         self.optimizer = optimizer
         self.device = device
 
-    def train_batch(self, batch):
+    def train_batch(self, batch,Epoch_num):
         X, y = batch
         x = X.squeeze(dim=0).transpose(0, 1).to(self.device)
         y = y.squeeze(dim=0).transpose(0, 1).to(self.device)
@@ -117,10 +117,11 @@ class TCNTrainer(Trainer):
         #Update params
         self.optimizer.step()
 
-
+        if Epoch_num%10==0:
+            torch.save(self.model.state_dict(),f'{os.getcwd()}/Model.pt')
         return loss.item()
 
-    def test_batch(self, batch):
+    def test_batch(self, batch,Epoch_num):
         X, y = batch
         x = X.squeeze(dim=0).transpose(0, 1).to(self.device)
         y = y.squeeze(dim=0).transpose(0, 1).to(self.device)
